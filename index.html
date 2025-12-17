@@ -27,6 +27,19 @@
 
 <script>
     var clickTag = "https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo";
+    // --- CONFIGURAÇÃO DE SOM ---
+const musicaFundo = new Audio('song.wav');
+musicaFundo.loop = true; // Mantém a música tocando em loop
+let audioIniciado = false;
+
+// Função para iniciar o som (necessária devido às regras de navegadores de 2025)
+function iniciarAudio() {
+    if (!audioIniciado) {
+        musicaFundo.play().catch(e => console.log("Clique na tela para o som iniciar."));
+        audioIniciado = true;
+    }
+}
+
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -59,9 +72,20 @@
     const teclas = {};
     window.addEventListener("keydown", e => teclas[e.code] = true);
     window.addEventListener("keyup", e => teclas[e.code] = false);
+    window.addEventListener("keydown", (e) => {
+    teclas[e.code] = true;
+    iniciarAudio(); // Adicione esta linha aqui
+});
+
 
     joystick.addEventListener("pointerdown", e => { joystick.setPointerCapture(e.pointerId); updateJoystick(e); });
     joystick.addEventListener("pointermove", e => { if (joystick.hasPointerCapture(e.pointerId)) updateJoystick(e); });
+    joystick.addEventListener("pointerdown", e => { 
+    joystick.setPointerCapture(e.pointerId); 
+    updateJoystick(e); 
+    iniciarAudio(); // Adicione esta linha aqui
+});
+
     joystick.addEventListener("pointerup", () => { moveX = 0; moveY = 0; knob.style.transform = "translate(0,0)"; });
 
     function updateJoystick(e) {
@@ -155,6 +179,7 @@
 </script>
 </body>
 </html>
+
 
 
 
