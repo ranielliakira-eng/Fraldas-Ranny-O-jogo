@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fraldas Ranny - O Jogo</title>
+    <style>
+        body { margin: 0; background: #2c3e50; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        canvas { background: #fdfdfd; border: 5px solid #34495e; max-width: 95vw; max-height: 95vh; touch-action: none; }
+        #telaFinal { display: none; position: absolute; background: rgba(0, 0, 0, 0.95); padding: 30px; border-radius: 15px; text-align: center; z-index: 10; width: 80%; max-width: 400px; }
+        #btnComoChegar { background-color: #27ae60; color: white; padding: 16px 24px; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        #joystickContainer { display: none; position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
+        #joystickKnob { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: rgba(255,255,255,0.5); border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+<div id="joystickContainer"><div id="joystickKnob"></div></div>
+
+<div id="telaFinal">
+    <h1>Fraldas Ranny</h1>
+    <p>Parabéns! Você atendeu os clientes com excelência na Estrada do Jaguaré, 1706.</p>
+    <button id="btnComoChegar">📍 Como Chegar no Maps</button>
+    <button onclick="location.reload()" style="background:none; border:1px solid #777; color:#777; padding:10px; cursor:pointer;">Jogar Novamente</button>
+</div>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const telaFinalHTML = document.getElementById("telaFinal");
+    const joystick = document.getElementById("joystickContainer");
+    const knob = document.getElementById("joystickKnob");
+
+    canvas.width = 800;
+    canvas.height = 600;
+
+    let estado = "JOGANDO";
+    let score = 0;
+    const TOTAL_CLIENTES = 3;
+
+    // --- ENTIDADES ---
+    const vendedor = { x: 400, y: 400, w: 45, h: 65, speed: 6, carrying: false };
+    const balcao = { x: 250, y: 120, w: 300, h: 60 };
+    const estoque = { x: 50, y: 450, w: 120, h: 100 };
+    
+    // Cliente começa fora da tela na direita (Porta)
+    let cliente = { x: 850, y: 120, w: 45, h: 65, status: "ENTRANDO" };
+
+    // --- INPUTS ---
+    const teclas = {};
+    let moveX = 0, moveY = 0;
+    window.onkeydown = (e) => teclas[e.code] = true;
+    window.onkeyup = (e) => teclas[e.code] = false;
+
+    // Joystick Mobile
+    if ('ontouchstart' in window) {
+        joystick.style.display = "block";
+        joystick.addEventListener("touchmove", (e) => {
+            const rect = joystick.getBoundingClientRect();
+            const touch = e.touches[0];
+            moveX = (touch.clientX - (rect.left + 50)) / 50;
+            moveY = (touch.clientY - (rect.top + 50)) / 50;
+            knob.style.transform = `translate(${moveX*30}px, ${moveY*30}px)`;
+        });
+        joystick.addEventListener("touchend", () => { moveX = 0; moveY = 0; knob.style.transform = "translate(0,0)"; });
+    }
+
+    function checkCollision(r1, r2) {
+        return r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y;
+    }
+
+    function update() {
+        if (estado !== "JOGANDO") return;
+
+        // Movimento Vendedor
+        if (teclas["ArrowRight"] || teclas["KeyD"]) vendedor.x += vendedor.speed;
+        if (teclas["ArrowLeft"] || teclas["KeyA"]) vendedor.x -= vendedor.speed;
+        if (teclas["ArrowUp"] || teclas["KeyW"]) vendedor.y -= vendedor.speed;
+        if (teclas["ArrowDown"] || teclas["KeyS"]) vendedor.y += vendedor.speed;
+        vendedor.x += moveX * vendedor.speed;
+        vendedor.y += moveY * vendedor.speed;
+
+        // Lógica do Cliente
+        if (cliente.status === "ENTRANDO") {
+            cliente.x -= 3;
+            if (cliente.x <= balcao.x + balcao.w - 50) cliente.status = "ESPERANDO";
+        } else if (cliente.status === "SAINDO") {
+            cliente.x += 4;
+            if (cliente.x > 850) {
+                if (score < TOTAL_CLIENTES) {
+                    cliente.x = 850;
+                    cliente.status = "ENTRANDO";
+                } else {
+                    estado = "FIM";
+                    canvas.style.display = "none";
+                    telaFinalHTML.style.display = "block";
+                }
+            }
+        }
+
+        // Interação Estoque
+        if (!vendedor.carrying && checkCollision(vendedor, estoque)) {
+            vendedor.carrying = true;
+        }
+
+        // Interação Entrega (Vendedor encosta no cliente esperando)
+        if (vendedor.carrying && cliente.status === "ESPERANDO" && checkCollision(vendedor, cliente)) {
+            vendedor.carrying = false;
+            cliente.status = "SAINDO";
+            score++;
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Chão
+        ctx.fillStyle = "#f0f0f0"; ctx.fillRect(0,0,800,600);
+
+        // Desenhar Balcão e Estoque
+        ctx.fillStyle = "#8e44ad"; ctx.fillRect(balcao.x, balcao.y, balcao.w, balcao.h);
+        ctx.fillStyle = "#e67e22"; ctx.fillRect(estoque.x, estoque.y, estoque.w, estoque.h);
+        
+        ctx.fillStyle = "black"; ctx.font = "14px Arial";
+        ctx.fillText("BALCÃO", balcao.x + 10, balcao.y - 5);
+        ctx.fillText("ESTOQUE DE FRALDAS", estoque.x, estoque.y - 5);
+
+        // Cliente
+        ctx.fillStyle = "#e74c3c";
+        ctx.fillRect(cliente.x, cliente.y, cliente.w, cliente.h);
+        if(cliente.status === "ESPERANDO") {
+            ctx.fillStyle = "black"; ctx.fillText("Quero fralda!", cliente.x, cliente.y - 10);
+        }
+
+        // Vendedor
+        ctx.fillStyle = "#2ecc71";
+        ctx.fillRect(vendedor.x, vendedor.y, vendedor.w, vendedor.h);
+        if (vendedor.carrying) {
+            ctx.fillStyle = "white"; ctx.fillRect(vendedor.x + 10, vendedor.y - 20, 25, 20);
+            ctx.strokeStyle = "black"; ctx.strokeRect(vendedor.x + 10, vendedor.y - 20, 25, 20);
+        }
+
+        // UI
+        ctx.fillStyle = "black"; ctx.font = "20px Arial";
+        ctx.fillText(`Atendimentos: ${score} / ${TOTAL_CLIENTES}`, 20, 40);
+    }
+
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+    document.getElementById("btnComoChegar").onclick = () => {
+        window.open(`www.google.com`, '_blank');
+    };
+
+    loop();
+</script>
+</body>
+</html>
