@@ -81,7 +81,7 @@
     const arara1 = { x: 600, y: 400, w: 150, h: 150 }; 
     const arara2 = { x: 600, y: 300, w: 150, h: 150 }; 
     const balcao = { x: 300, y: 170, w: 200, h: 130 }; 
-    const vendedor = { x: 370, y: 80, w: 60, h: 90, speed: 6, carrying: false };
+    const vendedor = { x: 370, y: 80, w: 80, h: 110, speed: 6, carrying: false };
     let cliente = { x: 350, y: 650, w: 150, h: 150, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
@@ -166,7 +166,7 @@
         ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
 
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
-        if (vendedor.carrying && imgFralda.complete) ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 40, 40, 30);
+        if (vendedor.carrying && imgFralda.complete) ctx.drawImage(imgFralda, vendedor.x + 20, vendedor.y + 50, 40, 30);
 
         if (imgArara2.complete) ctx.drawImage(imgArara2, arara2.x, arara2.y, arara2.w, arara2.h);
         if (imgArara1.complete) ctx.drawImage(imgArara1, arara1.x, arara1.y, arara1.w, arara1.h);
