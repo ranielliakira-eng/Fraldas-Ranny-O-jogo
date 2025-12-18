@@ -27,19 +27,18 @@
 
 <script>
     var clickTag = "https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo";
-    // --- CONFIGURAÇÃO DE SOM ---
-const musicaFundo = new Audio('song.wav');
-musicaFundo.loop = true; // Mantém a música tocando em loop
-let audioIniciado = false;
+    
+    // --- ÁUDIO ---
+    const musicaFundo = new Audio('song.wav');
+    musicaFundo.loop = true;
+    let audioIniciado = false;
 
-// Função para iniciar o som (necessária devido às regras de navegadores de 2025)
-function iniciarAudio() {
-    if (!audioIniciado) {
-        musicaFundo.play().catch(e => console.log("Clique na tela para o som iniciar."));
-        audioIniciado = true;
+    function iniciarAudio() {
+        if (!audioIniciado) {
+            musicaFundo.play().catch(e => console.log("Interação necessária para áudio."));
+            audioIniciado = true;
+        }
     }
-}
-
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -63,29 +62,28 @@ function iniciarAudio() {
     const imgEstoque = carregarImg('Estoque.png');
     const imgChao = carregarImg('piso_loja.png');
 
-    const vendedor = { x: 400, y: 450, w: 60, h: 80, speed: 6, carrying: false };
-    const balcao = { x: 250, y: 150, w: 250, h: 150 };
-    const estoque = { x: 20, y: 360, w: 280, h: 240 };
-    let cliente = { x: 850, y: 100, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
+    // CONFIGURAÇÕES DE POSIÇÃO SOLICITADAS
+    const estoque = { x: 20, y: 20, w: 280, h: 240 }; // Superior Esquerdo
+    const balcao = { x: 250, y: 150, w: 300, h: 100 };
+    const vendedor = { x: 400, y: 400, w: 60, h: 80, speed: 6, carrying: false };
+    // Cliente entra de baixo (y: 650) para cima
+    let cliente = { x: 370, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
     const teclas = {};
-    window.addEventListener("keydown", e => teclas[e.code] = true);
+
+    window.addEventListener("keydown", e => {
+        teclas[e.code] = true;
+        iniciarAudio();
+    });
     window.addEventListener("keyup", e => teclas[e.code] = false);
-    window.addEventListener("keydown", (e) => {
-    teclas[e.code] = true;
-    iniciarAudio(); // Adicione esta linha aqui
-});
 
-
-    joystick.addEventListener("pointerdown", e => { joystick.setPointerCapture(e.pointerId); updateJoystick(e); });
-    joystick.addEventListener("pointermove", e => { if (joystick.hasPointerCapture(e.pointerId)) updateJoystick(e); });
     joystick.addEventListener("pointerdown", e => { 
-    joystick.setPointerCapture(e.pointerId); 
-    updateJoystick(e); 
-    iniciarAudio(); // Adicione esta linha aqui
-});
-
+        joystick.setPointerCapture(e.pointerId); 
+        iniciarAudio();
+        updateJoystick(e); 
+    });
+    joystick.addEventListener("pointermove", e => { if (joystick.hasPointerCapture(e.pointerId)) updateJoystick(e); });
     joystick.addEventListener("pointerup", () => { moveX = 0; moveY = 0; knob.style.transform = "translate(0,0)"; });
 
     function updateJoystick(e) {
@@ -108,14 +106,20 @@ function iniciarAudio() {
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
 
+        // Lógica de Movimento Vertical do Cliente
         if (cliente.status === "ENTRANDO") {
-            cliente.x -= cliente.vel; 
-            if (cliente.x <= balcao.x + 130) cliente.status = "ESPERANDO";
+            cliente.y -= cliente.vel; 
+            if (cliente.y <= balcao.y + balcao.h) cliente.status = "ESPERANDO";
         } else if (cliente.status === "SAINDO") {
-            cliente.x += cliente.vel + 2;
-            if (cliente.x > 850) {
-                if (score < TOTAL_CLIENTES) { cliente.x = 850; cliente.status = "ENTRANDO"; }
-                else { estado = "FIM"; joystick.style.display = "none"; document.getElementById("telaFinal").style.display = "block"; }
+            cliente.y += cliente.vel + 2;
+            if (cliente.y > 650) {
+                if (score < TOTAL_CLIENTES) { cliente.y = 650; cliente.status = "ENTRANDO"; }
+                else { 
+                    estado = "FIM"; 
+                    musicaFundo.pause();
+                    joystick.style.display = "none"; 
+                    document.getElementById("telaFinal").style.display = "block"; 
+                }
             }
         }
 
@@ -124,11 +128,9 @@ function iniciarAudio() {
             vendedor.carrying = true;
         }
 
-        // Entrega Precisa (Apenas se estiver perto do cliente no X E Y)
+        // Entrega
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            let distX = Math.abs(vendedor.x - cliente.x);
-            let distY = Math.abs(vendedor.y - (balcao.y + balcao.h)); // Distância da base do balcão
-            if (distX < 80 && distY < 60) {
+            if (Math.abs(vendedor.x - cliente.x) < 70 && Math.abs(vendedor.y - cliente.y) < 70) {
                 vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
@@ -137,48 +139,39 @@ function iniciarAudio() {
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Piso
         if (imgChao.complete && imgChao.naturalWidth > 0) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
 
-        // 2. Estoque
         if (imgEstoque.complete && imgEstoque.naturalWidth > 0) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
         else { ctx.fillStyle = "#6d4c41"; ctx.fillRect(estoque.x, estoque.y, estoque.w, estoque.h); }
 
-        // 3. Cliente (Desenha antes do balcão para parecer atrás)
         if (imgCliente.complete && imgCliente.naturalWidth > 0) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
         else { ctx.fillStyle = "#c0392b"; ctx.fillRect(cliente.x, cliente.y, cliente.w, cliente.h); }
 
-        // 4. Balcão
         if (imgBalcao.complete && imgBalcao.naturalWidth > 0) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
         else { ctx.fillStyle = "#5d4037"; ctx.fillRect(balcao.x, balcao.y, balcao.w, balcao.h); }
 
-        // 5. Vendedor
         if (imgVendedor.complete && imgVendedor.naturalWidth > 0) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
         else { ctx.fillStyle = "#2980b9"; ctx.fillRect(vendedor.x, vendedor.y, vendedor.w, vendedor.h); }
 
-        // 6. Fralda
         if (vendedor.carrying) {
             const wFr = 90, hFr = 70;
             if (imgFralda.complete && imgFralda.naturalWidth > 0) ctx.drawImage(imgFralda, vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr);
             else { ctx.fillStyle = "#fff"; ctx.fillRect(vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr); }
         }
 
-        ctx.fillStyle = "#333"; ctx.font = "bold 22px Arial";
-        ctx.fillText(`Atendimentos: ${score} / ${TOTAL_CLIENTES}`, 20, 40);
+        // PLACAR NO CANTO SUPERIOR DIREITO
+        ctx.fillStyle = "#333"; 
+        ctx.font = "bold 22px Arial";
+        ctx.textAlign = "right";
+        ctx.fillText(`Clientes atendidos: ${score} / ${TOTAL_CLIENTES}`, canvas.width - 20, 40);
+        ctx.textAlign = "left"; // Reset para não afetar outros textos
     }
 
     document.getElementById("btnComoChegar").onclick = () => window.open(clickTag, "_blank");
 
-    function loop() {
-        update();
-        draw();
-        requestAnimationFrame(loop);
-    }
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
     loop();
 </script>
 </body>
 </html>
-
-
-
