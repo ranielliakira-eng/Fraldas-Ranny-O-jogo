@@ -32,9 +32,7 @@
 
     function iniciarAudio() {
         if (!audioIniciado) {
-            musicaFundo.play().then(() => {
-                audioIniciado = true;
-            }).catch(e => console.log("Áudio aguardando interação."));
+            musicaFundo.play().then(() => { audioIniciado = true; }).catch(e => {});
         }
     }
 
@@ -45,7 +43,9 @@
 
     canvas.width = 800; canvas.height = 600;
     let estado = "JOGANDO", score = 0;
-    const TOTAL_CLIENTES = 3;
+    
+    // --- ALTERADO PARA 3 CLIENTES ---
+    const TOTAL_CLIENTES = 3; 
 
     const carregarImg = (src) => {
         const img = new Image();
@@ -55,7 +55,6 @@
 
     const imgFralda = carregarImg('Fraldas.png');
     const imgVendedor = carregarImg('vendedor.png');
-    const imgCliente = carregarImg('cliente.png');
     const imgBalcao = carregarImg('balcao.png');
     const imgEstoque = carregarImg('Estoque.png');
     const imgArara1 = carregarImg('arara-de-roupas-1.png');
@@ -63,15 +62,27 @@
     const imgChao = carregarImg('piso_loja.png');
     const imgMao = carregarImg('mao.png');
 
-    let anguloMao = 0; // Para animação da mãozinha
+    const imagensClientes = [
+        carregarImg('cliente1.png'),
+        carregarImg('cliente2.png'),
+        carregarImg('cliente3.png')
+    ];
+    
+    let imgClienteAtual = imagensClientes[Math.floor(Math.random() * imagensClientes.length)]; 
 
+    function sortearProximoCliente() {
+        const novoIndice = Math.floor(Math.random() * imagensClientes.length);
+        imgClienteAtual = imagensClientes[novoIndice];
+    }
+
+    let anguloMao = 0;
     const obstaculo = { x: 305, y: 300, w: 200, h: 5 };
     const estoque = { x: 20, y: 360, w: 280, h: 240 };
     const arara1 = { x: 600, y: 400, w: 150, h: 150 }; 
     const arara2 = { x: 600, y: 300, w: 150, h: 150 }; 
     const balcao = { x: 300, y: 170, w: 200, h: 130 }; 
     const vendedor = { x: 370, y: 80, w: 60, h: 90, speed: 6, carrying: false };
-    let cliente = { x: 450, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
+    let cliente = { x: 350, y: 650, w: 150, h: 150, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
     const teclas = {};
@@ -105,35 +116,29 @@
     function update() {
         if (estado !== "JOGANDO") return;
         
-        let tx = (teclas["ArrowRight"] || teclas["KeyD"] ? 1 : 0) - (teclas["ArrowLeft"] || teclas["KeyA"] ? 1 : 0);
-        let ty = (teclas["ArrowDown"] || teclas["KeyS"] ? 1 : 0) - (teclas["ArrowUp"] || teclas["KeyW"] ? 1 : 0);
-        
-        let vx = (tx + moveX) * vendedor.speed;
-        let vy = (ty + moveY) * vendedor.speed;
+        let vx = ((teclas["ArrowRight"] || teclas["KeyD"] ? 1 : 0) - (teclas["ArrowLeft"] || teclas["KeyA"] ? 1 : 0) + moveX) * vendedor.speed;
+        let vy = ((teclas["ArrowDown"] || teclas["KeyS"] ? 1 : 0) - (teclas["ArrowUp"] || teclas["KeyW"] ? 1 : 0) + moveY) * vendedor.speed;
 
-        let originalX = vendedor.x;
-        vendedor.x += vx;
-        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) {
-            vendedor.x = originalX;
-        }
+        let oldX = vendedor.x; vendedor.x += vx;
+        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) vendedor.x = oldX;
 
-        let originalY = vendedor.y;
-        vendedor.y += vy;
-        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) {
-            vendedor.y = originalY;
-        }
+        let oldY = vendedor.y; vendedor.y += vy;
+        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) vendedor.y = oldY;
         
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
 
         if (cliente.status === "ENTRANDO") {
             cliente.y -= cliente.vel; 
-            if (cliente.y <= 320) { cliente.y = 320; cliente.status = "ESPERANDO"; }
+            if (cliente.y <= 250) { cliente.y = 250; cliente.status = "ESPERANDO"; }
         } else if (cliente.status === "SAINDO") {
             cliente.y += cliente.vel + 2;
             if (cliente.y > 650) {
-                if (score < TOTAL_CLIENTES) { cliente.y = 650; cliente.status = "ENTRANDO"; }
-                else { 
+                if (score < TOTAL_CLIENTES) { 
+                    cliente.y = 650; 
+                    cliente.status = "ENTRANDO"; 
+                    sortearProximoCliente(); 
+                } else { 
                     estado = "FIM"; 
                     musicaFundo.pause();
                     joystick.style.display = "none"; 
@@ -148,62 +153,41 @@
 
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
             if (vendedor.x > 300 && vendedor.x < 450 && vendedor.y > 100 && vendedor.y < 200) {
-                vendedor.carrying = false; 
-                cliente.status = "SAINDO"; 
-                score++;
+                vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
     }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
-        else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
 
         ctx.fillStyle = "#a36d4a"; 
         ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
-        ctx.strokeStyle = "#fff"; ctx.strokeRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
 
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
-        if (vendedor.carrying && imgFralda.complete) {
-            ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 40, 40, 30);
-        }
+        if (vendedor.carrying && imgFralda.complete) ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 40, 40, 30);
 
         if (imgArara2.complete) ctx.drawImage(imgArara2, arara2.x, arara2.y, arara2.w, arara2.h);
         if (imgArara1.complete) ctx.drawImage(imgArara1, arara1.x, arara1.y, arara1.w, arara1.h);
-	
         if (imgEstoque.complete) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
         if (imgBalcao.complete) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
 
-        if (imgCliente.complete) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
+        if (imgClienteAtual && imgClienteAtual.complete) {
+            ctx.drawImage(imgClienteAtual, cliente.x, cliente.y, cliente.w, cliente.h);
+        }
 
         if (cliente.status === "ESPERANDO") {
-            const falaX = cliente.x - 50;
-            const falaY = cliente.y - 40;
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.roundRect(falaX, falaY, 200, 30, 10); 
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(cliente.x + 20, falaY + 30);
-            ctx.lineTo(cliente.x + 30, falaY + 45);
-            ctx.lineTo(cliente.x + 40, falaY + 30);
-            ctx.fill();
-            ctx.fillStyle = "black";
-            ctx.font = "bold 14px Arial";
-            ctx.fillText("Olá, quero fraldas, por favor!", falaX + 10, falaY + 20);
+            const fx = cliente.x - 50, fy = cliente.y + 30;
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.roundRect(fx, fy, 200, 30, 10); ctx.fill();
+            ctx.fillStyle = "black"; ctx.font = "bold 14px Arial";
+            ctx.fillText("Olá, quero fraldas, por favor!", fx +10, fy +20);
 
-            // LOGICA DAS MÃOZINHAS
             anguloMao += 0.1;
             let flutuar = Math.sin(anguloMao) * 10;
-
-            if (!vendedor.carrying) {
-                // Aponta para o Estoque
-                if (imgMao.complete) ctx.drawImage(imgMao, estoque.x + 110, estoque.y - 50 + flutuar, 45, 45);
-            } else {
-                // Aponta para o Balcão
-                if (imgMao.complete) ctx.drawImage(imgMao, balcao.x + 75, balcao.y - 60 + flutuar, 45, 45);
+            if (imgMao.complete) {
+                if (!vendedor.carrying) ctx.drawImage(imgMao, estoque.x + 110, estoque.y - 50 + flutuar, 45, 45);
+                else ctx.drawImage(imgMao, balcao.x + 75, balcao.y - 60 + flutuar, 45, 45);
             }
         }
 
@@ -211,12 +195,7 @@
         ctx.fillText("Clientes Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
     }
 
-    function gameLoop() {
-        update();
-        draw();
-        requestAnimationFrame(gameLoop);
-    }
-
+    function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
     gameLoop();
 </script>
 </body>
