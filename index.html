@@ -62,7 +62,7 @@
     const imgChao = carregarImg('piso_loja.png');
 
     // CONFIGURAÇÕES DE POSIÇÃO
-    const estoque = { x: 20, y: 560, w: 280, h: 240 }; 
+    const estoque = { x: 20, y: 360, w: 280, h: 240 }; 
     const balcao = { x: 250, y: 170, w: 300, h: 130 }; 
     const vendedor = { x: 450, y: 400, w: 60, h: 80, speed: 6, carrying: false };
     let cliente = { x: 370, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
@@ -132,7 +132,7 @@
 
         // Entrega (Vendedor encosta na base do balcão para entregar)
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            if (Math.abs(vendedor.x - balcao.x ) < 5 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 250) {
+            if (Math.abs(vendedor.x - balcao.x ) < 5 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 150) {
                 vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
@@ -184,6 +184,7 @@
 </script>
 </body>
 </html>
+
 
 
 
