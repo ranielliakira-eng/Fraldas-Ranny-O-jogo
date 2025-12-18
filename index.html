@@ -44,7 +44,7 @@
     const joystick = document.getElementById("joystickContainer");
     const knob = document.getElementById("joystickKnob");
 
-    canvas.width = 800; canvas.height = 600;
+    canvas.width = 700; canvas.height = 600;
     let estado = "JOGANDO", score = 0;
     const TOTAL_CLIENTES = 3;
 
@@ -143,7 +143,7 @@
 
         // 1. Piso
         if (imgChao.complete && imgChao.naturalWidth > 0) ctx.drawImage(imgChao, 0, 0, 800, 600);
-        else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
+        else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 700, 600); }
 
         // 2. Estoque
         if (imgEstoque.complete && imgEstoque.naturalWidth > 0) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
@@ -184,6 +184,7 @@
 </script>
 </body>
 </html>
+
 
 
 
