@@ -10,7 +10,23 @@
         #joystickContainer { position: absolute; bottom: 40px; right: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; border: 2px solid #fff; touch-action: none; display: block; z-index: 100; }
         #joystickKnob { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.8; pointer-events: none; }
         #telaFinal { background: rgb(71, 13, 28); padding: 30px; border-radius: 20px; text-align: center; z-index: 200; width: 85%; max-width: 400px; border: 2px solid #fff; display: none; position: absolute; }
-        #btnComoChegar { background-color: #27ae60; color: white; padding: 15px; border: none; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 15px; display: block; text-decoration: none; }
+        #btnComoChegar { 
+            background-color: #27ae60; 
+            color: white; 
+            padding: 15px; 
+            border: none; 
+            border-radius: 50px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 80%; 
+            margin-top: 15px; 
+            display: block; 
+            text-decoration: none; 
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
@@ -20,14 +36,12 @@
 
 <div id="telaFinal">
     <h1>Fraldas Ranny</h1>
-    <p>Parabéns! Você atendeu os clientes. Visite nossa loja física</p>
+    <p>Parabéns! Você atendeu os clientes. <br> Visite nossa loja física</p>
     <a id="btnComoChegar" href="https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo" target="_blank">📍 Abrir no Google Maps</a>
-    <button onclick="location.reload()" style="background:none; border:1px solid #fff; color:#fff; padding:10px; margin-top:15px; cursor:pointer; border-radius:10px; width: 100%;">Jogar Novamente</button>
+    <button onclick="location.reload()" style="background:none; border:1px solid #fff; color:#fff; padding:10px; margin-top:15px; cursor:pointer; border-radius:10px; width: 80%; margin-left: auto; margin-right: auto;">Jogar Novamente</button>
 </div>
 
-<script>
-    var clickTag = "https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo";
-    
+<script>    
     const musicaFundo = new Audio('song.wav');
     musicaFundo.loop = true;
     let audioIniciado = false;
@@ -136,7 +150,7 @@
         }
     }
 
-        function draw() {
+    function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // 1. CHÃO
@@ -199,6 +213,3 @@
 </script>
 </body>
 </html>
-
-
-
