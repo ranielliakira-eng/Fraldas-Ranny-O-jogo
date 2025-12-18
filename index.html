@@ -130,22 +130,16 @@
             vendedor.carrying = true;
         }
 
-        // Entrega (Vendedor encosta na base do balcão para entregar)
-        // Entrega (Vendedor encosta na frente do balcão para entregar)
+        // Entrega (Vendedor leva a fralda para a área específica)
 if (vendedor.carrying && cliente.status === "ESPERANDO") {
-    // Verificamos se o vendedor está alinhado horizontalmente com o balcão
-    // E se ele está encostando na parte de baixo (y + h) do balcão
-    if (vendedor.x + vendedor.w > balcao.x && 
-        vendedor.x < balcao.x + balcao.w && 
-        Math.abs(vendedor.y - (balcao.y + balcao.h)) < 20) {
-        
+    // Área definida: X entre 200 e 550 (frente do balcão) e Y próximo ao balcão
+    if (vendedor.x > 200 && vendedor.x < 550 && vendedor.y < 320) {
         vendedor.carrying = false; 
         cliente.status = "SAINDO"; 
         score++;
     }
 }
 
-    }
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -193,6 +187,7 @@ if (vendedor.carrying && cliente.status === "ESPERANDO") {
 </script>
 </body>
 </html>
+
 
 
 
