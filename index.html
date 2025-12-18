@@ -26,7 +26,7 @@
 </div>
 
 <script>
-    var clickTag = "https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo";
+    var clickTag = "www.google.com";
     
     // --- ÁUDIO ---
     const musicaFundo = new Audio('song.wav');
@@ -60,13 +60,12 @@
     const imgCliente = carregarImg('cliente.png');
     const imgBalcao = carregarImg('balcao.png');
     const imgEstoque = carregarImg('Estoque.png');
-    const imgChao = carregarImg('piso_loja.png');
+    const imgChao = carregarImg('piso_lo_ja.png');
 
-    // CONFIGURAÇÕES DE POSIÇÃO SOLICITADAS
-    const estoque = { x: 20, y: 20, w: 280, h: 240 }; // Superior Esquerdo
-    const balcao = { x: 250, y: 150, w: 300, h: 100 };
+    // CONFIGURAÇÕES DE POSIÇÃO
+    const estoque = { x: 20, y: 20, w: 280, h: 240 }; 
+    const balcao = { x: 250, y: 160, w: 300, h: 100 }; // y=160
     const vendedor = { x: 400, y: 400, w: 60, h: 80, speed: 6, carrying: false };
-    // Cliente entra de baixo (y: 650) para cima
     let cliente = { x: 370, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
@@ -99,6 +98,7 @@
 
     function update() {
         if (estado !== "JOGANDO") return;
+        
         let tx = (teclas["ArrowRight"] || teclas["KeyD"] ? 1 : 0) - (teclas["ArrowLeft"] || teclas["KeyA"] ? 1 : 0);
         let ty = (teclas["ArrowDown"] || teclas["KeyS"] ? 1 : 0) - (teclas["ArrowUp"] || teclas["KeyW"] ? 1 : 0);
         vendedor.x += (tx + moveX) * vendedor.speed; vendedor.y += (ty + moveY) * vendedor.speed;
@@ -106,10 +106,13 @@
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
 
-        // Lógica de Movimento Vertical do Cliente
+        // Cliente sobe até ficar atrás do balcão (y=100)
         if (cliente.status === "ENTRANDO") {
             cliente.y -= cliente.vel; 
-            if (cliente.y <= balcao.y + balcao.h) cliente.status = "ESPERANDO";
+            if (cliente.y <= 100) {
+                cliente.y = 100;
+                cliente.status = "ESPERANDO";
+            }
         } else if (cliente.status === "SAINDO") {
             cliente.y += cliente.vel + 2;
             if (cliente.y > 650) {
@@ -128,9 +131,10 @@
             vendedor.carrying = true;
         }
 
-        // Entrega
+        // Entrega (Vendedor encosta na frente do balcão para entregar ao cliente que está atrás)
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            if (Math.abs(vendedor.x - cliente.x) < 70 && Math.abs(vendedor.y - cliente.y) < 70) {
+            // Se vendedor estiver perto do balcão horizontalmente e encostado na base do balcão verticalmente
+            if (Math.abs(vendedor.x - balcao.x - 100) < 150 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 40) {
                 vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
@@ -139,33 +143,39 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // 1. Piso
         if (imgChao.complete && imgChao.naturalWidth > 0) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
 
+        // 2. Estoque
         if (imgEstoque.complete && imgEstoque.naturalWidth > 0) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
         else { ctx.fillStyle = "#6d4c41"; ctx.fillRect(estoque.x, estoque.y, estoque.w, estoque.h); }
 
+        // 3. CLIENTE (Plano de trás)
         if (imgCliente.complete && imgCliente.naturalWidth > 0) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
         else { ctx.fillStyle = "#c0392b"; ctx.fillRect(cliente.x, cliente.y, cliente.w, cliente.h); }
 
+        // 4. BALCÃO (Plano do meio - Fica à frente do cliente)
         if (imgBalcao.complete && imgBalcao.naturalWidth > 0) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
         else { ctx.fillStyle = "#5d4037"; ctx.fillRect(balcao.x, balcao.y, balcao.w, balcao.h); }
 
+        // 5. VENDEDOR (Plano da frente - Fica à frente do balcão)
         if (imgVendedor.complete && imgVendedor.naturalWidth > 0) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
         else { ctx.fillStyle = "#2980b9"; ctx.fillRect(vendedor.x, vendedor.y, vendedor.w, vendedor.h); }
 
+        // 6. Fralda (Tamanho 90x70)
         if (vendedor.carrying) {
             const wFr = 90, hFr = 70;
             if (imgFralda.complete && imgFralda.naturalWidth > 0) ctx.drawImage(imgFralda, vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr);
             else { ctx.fillStyle = "#fff"; ctx.fillRect(vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr); }
         }
 
-        // PLACAR NO CANTO SUPERIOR DIREITO
+        // Placar Superior Direito
         ctx.fillStyle = "#333"; 
         ctx.font = "bold 22px Arial";
         ctx.textAlign = "right";
         ctx.fillText(`Clientes atendidos: ${score} / ${TOTAL_CLIENTES}`, canvas.width - 20, 40);
-        ctx.textAlign = "left"; // Reset para não afetar outros textos
+        ctx.textAlign = "left"; 
     }
 
     document.getElementById("btnComoChegar").onclick = () => window.open(clickTag, "_blank");
