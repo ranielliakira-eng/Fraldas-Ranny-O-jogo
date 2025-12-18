@@ -21,28 +21,22 @@
 <div id="telaFinal">
     <h1>Fraldas Ranny</h1>
     <p>Parabéns! Você atendeu os clientes. Visite-nos no Jaguaré!</p>
-    <button id="btnComoChegar">📍 Abrir no Google Maps</button>
+    <a id="btnComoChegar" href="www.google.com" target="_blank">📍 Abrir no Google Maps</a>
     <button onclick="location.reload()" style="background:none; border:1px solid #fff; color:#fff; padding:10px; margin-top:15px; cursor:pointer; border-radius:10px; width: 100%;">Jogar Novamente</button>
 </div>
 
 <script>
-    var clickTag = "https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo";
-    
     const musicaFundo = new Audio('song.wav');
     musicaFundo.loop = true;
     let audioIniciado = false;
 
     function iniciarAudio() {
-    if (!audioIniciado) {
-        // Tenta tocar e gerencia o bloqueio do navegador
-        musicaFundo.play().then(() => {
-            audioIniciado = true;
-        }).catch(e => {
-            console.log("Aguardando interação para iniciar o som.");
-        });
+        if (!audioIniciado) {
+            musicaFundo.play().then(() => {
+                audioIniciado = true;
+            }).catch(e => console.log("Áudio aguardando interação."));
+        }
     }
-}
-
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -69,16 +63,13 @@
     // CONFIGURAÇÕES DE POSIÇÃO
     const estoque = { x: 20, y: 360, w: 280, h: 240 }; 
     const balcao = { x: 250, y: 170, w: 300, h: 130 }; 
-    const vendedor = { x: 450, y: 400, w: 60, h: 80, speed: 6, carrying: false };
-    let cliente = { x: 370, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
+    const vendedor = { x: 370, y: 80, w: 60, h: 80, speed: 6, carrying: false }; // Agora começa atrás do balcão
+    let cliente = { x: 450, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 }; // Cliente entra pela frente
 
     let moveX = 0, moveY = 0;
     const teclas = {};
 
-    window.addEventListener("keydown", e => {
-        teclas[e.code] = true;
-        iniciarAudio();
-    });
+    window.addEventListener("keydown", e => { teclas[e.code] = true; iniciarAudio(); });
     window.addEventListener("keyup", e => teclas[e.code] = false);
 
     joystick.addEventListener("pointerdown", e => { 
@@ -105,18 +96,15 @@
         
         let tx = (teclas["ArrowRight"] || teclas["KeyD"] ? 1 : 0) - (teclas["ArrowLeft"] || teclas["KeyA"] ? 1 : 0);
         let ty = (teclas["ArrowDown"] || teclas["KeyS"] ? 1 : 0) - (teclas["ArrowUp"] || teclas["KeyW"] ? 1 : 0);
-        vendedor.x += (tx + moveX) * vendedor.speed; vendedor.y += (ty + moveY) * vendedor.speed;
+        vendedor.x += (tx + moveX) * vendedor.speed; 
+        vendedor.y += (ty + moveY) * vendedor.speed;
         
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
 
-        // Movimento do Cliente (Para em y=80, ATRÁS do balcão)
         if (cliente.status === "ENTRANDO") {
             cliente.y -= cliente.vel; 
-            if (cliente.y <= 250) {
-                cliente.y = 250;
-                cliente.status = "ESPERANDO";
-            }
+            if (cliente.y <= 320) { cliente.y = 320; cliente.status = "ESPERANDO"; }
         } else if (cliente.status === "SAINDO") {
             cliente.y += cliente.vel + 2;
             if (cliente.y > 650) {
@@ -130,81 +118,58 @@
             }
         }
 
-        // Colisão Estoque
+        // Colisão Estoque (Vendedor pega fralda)
         if (!vendedor.carrying && vendedor.x < estoque.x + estoque.w && vendedor.x + vendedor.w > estoque.x && vendedor.y < estoque.y + estoque.h && vendedor.y + vendedor.h > estoque.y) {
             vendedor.carrying = true;
         }
 
-        // Entrega (Vendedor leva a fralda para a área específica)
-if (vendedor.carrying && cliente.status === "ESPERANDO") {
-    // Área definida: X entre 200 e 550 (frente do balcão) e Y próximo ao balcão
-    if (vendedor.x > 200 && vendedor.x < 550 && vendedor.y < 320) {
-        vendedor.carrying = false; 
-        cliente.status = "SAINDO"; 
-        score++;
+        // Entrega (Vendedor entrega por trás do balcão)
+        if (vendedor.carrying && cliente.status === "ESPERANDO") {
+            // Se o vendedor chegar perto da parte de trás do balcão (y por volta de 170)
+            if (vendedor.x > 200 && vendedor.x < 550 && vendedor.y > 100 && vendedor.y < 200) {
+                vendedor.carrying = false; 
+                cliente.status = "SAINDO"; 
+                score++;
+            }
+        }
     }
-}
-
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // 1. Piso
-        if (imgChao.complete && imgChao.naturalWidth > 0) ctx.drawImage(imgChao, 0, 0, 800, 600);
+        if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
 
-        // 2. Estoque
-        if (imgEstoque.complete && imgEstoque.naturalWidth > 0) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
-        else { ctx.fillStyle = "#6d4c41"; ctx.fillRect(estoque.x, estoque.y, estoque.w, estoque.h); }
+        // 2. Vendedor (Agora desenhado primeiro para ficar ATRÁS de tudo)
+        if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
 
-        // 3. VENDEDOR (DESENHADO POR ÚLTIMO PARA FICAR À FRENTE DO BALCÃO)
-        if (imgVendedor.complete && imgVendedor.naturalWidth > 0) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
-        else { ctx.fillStyle = "#2980b9"; ctx.fillRect(vendedor.x, vendedor.y, vendedor.w, vendedor.h); }
-        
-        // 4. BALCÃO (DESENHADO DEPOIS DO CLIENTE PARA COBRIR AS PERNAS DELE)
-        if (imgBalcao.complete && imgBalcao.naturalWidth > 0) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
-        else { ctx.fillStyle = "#5d4037"; ctx.fillRect(balcao.x, balcao.y, balcao.w, balcao.h); }
-
-        // 5. CLIENTE (DESENHADO PRIMEIRO PARA FICAR ATRÁS)
-        if (imgCliente.complete && imgCliente.naturalWidth > 0) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
-        else { ctx.fillStyle = "#c0392b"; ctx.fillRect(cliente.x, cliente.y, cliente.w, cliente.h); }
-
-        
-        // 6. Fralda (Tamanho 90x70)
-        if (vendedor.carrying) {
-            const wFr = 90, hFr = 70;
-            if (imgFralda.complete && imgFralda.naturalWidth > 0) ctx.drawImage(imgFralda, vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr);
-            else { ctx.fillStyle = "#fff"; ctx.fillRect(vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr); }
+        // 3. Fralda (Na mão do vendedor)
+        if (vendedor.carrying && imgFralda.complete) {
+            ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 10, 40, 40);
         }
 
-        // Placar Superior Direito
-        ctx.fillStyle = "#333"; 
-        ctx.font = "bold 22px Arial";
-        ctx.textAlign = "right";
-        ctx.fillText(`Clientes atendidos: ${score} / ${TOTAL_CLIENTES}`, canvas.width - 20, 40);
-        ctx.textAlign = "left"; 
+        // 4. Estoque (Antes do cliente)
+        if (imgEstoque.complete) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
+
+        // 5. Balcão (Cobre o vendedor)
+        if (imgBalcao.complete) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
+
+        // 6. Cliente (Desenhado por último para ficar À FRENTE do balcão)
+        if (imgCliente.complete) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
+
+        // Score
+        ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
+        ctx.fillText("Clientes Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
     }
 
-    document.getElementById("btnComoChegar").onclick = () => window.open(clickTag, "_blank");
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
 
-    function loop() { update(); draw(); requestAnimationFrame(loop); }
-    loop();
+    gameLoop();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
