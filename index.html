@@ -10,23 +10,7 @@
         #joystickContainer { position: absolute; bottom: 10px; right: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.2); border-radius: 50%; border: 2px solid #fff; touch-action: none; display: block; z-index: 100; }
         #joystickKnob { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.8; pointer-events: none; }
         #telaFinal { background: rgb(71, 13, 28); padding: 30px; border-radius: 20px; text-align: center; z-index: 200; width: 85%; max-width: 400px; border: 2px solid #fff; display: none; position: absolute; }
-        #btnComoChegar { 
-            background-color: #27ae60; 
-            color: white; 
-            padding: 15px; 
-            border: none; 
-            border-radius: 50px; 
-            font-size: 16px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            width: 80%; 
-            margin-top: 15px; 
-            display: block; 
-            text-decoration: none; 
-            text-align: center;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        #btnComoChegar { background-color: #27ae60; color: white; padding: 15px; border: none; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; width: 80%; margin-top: 15px; display: block; text-decoration: none; text-align: center; margin-left: auto; margin-right: auto; }
     </style>
 </head>
 <body>
@@ -74,13 +58,18 @@
     const imgCliente = carregarImg('cliente.png');
     const imgBalcao = carregarImg('balcao.png');
     const imgEstoque = carregarImg('Estoque.png');
+    const imgArara1 = carregarImg('arara-de-roupas-1.png');
+    const imgArara2 = carregarImg('arara-de-roupas-2.png');
     const imgChao = carregarImg('piso_loja.png');
 
-    // CONFIGURAÇÕES DE POSIÇÃO
-    const estoque = { x: 20, y: 360, w: 280, h: 240 }; 
-    const balcao = { x: 250, y: 170, w: 300, h: 130 }; 
-    const vendedor = { x: 370, y: 80, w: 60, h: 80, speed: 6, carrying: false }; // Agora começa atrás do balcão
-    let cliente = { x: 450, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 }; // Cliente entra pela frente
+    // CONFIGURAÇÕES DE POSIÇÃO E OBSTÁCULOS
+    const obstaculo = { x: 305, y: 300, w: 200, h: 5 };
+    const estoque = { x: 20, y: 360, w: 280, h: 240 };
+    const arara1 = { x: 600, y: 400, w: 150, h: 150 }; 
+    const arara2 = { x: 600, y: 300, w: 150, h: 150 }; 
+    const balcao = { x: 300, y: 170, w: 200, h: 130 }; 
+    const vendedor = { x: 370, y: 80, w: 60, h: 80, speed: 6, carrying: false };
+    let cliente = { x: 450, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
     const teclas = {};
@@ -107,13 +96,32 @@
         knob.style.transform = `translate(${Math.cos(Math.atan2(dy, dx)) * visualDist}px, ${Math.sin(Math.atan2(dy, dx)) * visualDist}px)`;
     }
 
+    // Função auxiliar para checar colisão entre dois retângulos
+    function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
+        return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
+    }
+
     function update() {
         if (estado !== "JOGANDO") return;
         
         let tx = (teclas["ArrowRight"] || teclas["KeyD"] ? 1 : 0) - (teclas["ArrowLeft"] || teclas["KeyA"] ? 1 : 0);
         let ty = (teclas["ArrowDown"] || teclas["KeyS"] ? 1 : 0) - (teclas["ArrowUp"] || teclas["KeyW"] ? 1 : 0);
-        vendedor.x += (tx + moveX) * vendedor.speed; 
-        vendedor.y += (ty + moveY) * vendedor.speed;
+        
+        let vx = (tx + moveX) * vendedor.speed;
+        let vy = (ty + moveY) * vendedor.speed;
+
+        // Movimentação com colisão separada por eixo (permite deslizar)
+        let originalX = vendedor.x;
+        vendedor.x += vx;
+        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) {
+            vendedor.x = originalX;
+        }
+
+        let originalY = vendedor.y;
+        vendedor.y += vy;
+        if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) {
+            vendedor.y = originalY;
+        }
         
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
@@ -134,15 +142,14 @@
             }
         }
 
-        // Colisão Estoque (Vendedor pega fralda)
-        if (!vendedor.carrying && vendedor.x < estoque.x + estoque.w && vendedor.x + vendedor.w > estoque.x && vendedor.y < estoque.y + estoque.h && vendedor.y + vendedor.h > estoque.y) {
+        // Colisão Estoque
+        if (!vendedor.carrying && rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, estoque.x, estoque.y, estoque.w, estoque.h)) {
             vendedor.carrying = true;
         }
 
-        // Entrega (Vendedor entrega por trás do balcão)
+        // Entrega Balcão
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            // Se o vendedor chegar perto da parte de trás do balcão (y por volta de 170)
-            if (vendedor.x > 200 && vendedor.x < 550 && vendedor.y > 100 && vendedor.y < 200) {
+            if (vendedor.x > 300 && vendedor.x < 450 && vendedor.y > 100 && vendedor.y < 200) {
                 vendedor.carrying = false; 
                 cliente.status = "SAINDO"; 
                 score++;
@@ -156,52 +163,50 @@
         // 1. CHÃO
         if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
-        
-        // 2. VENDEDOR (Atrás do balcão)
+
+        // 2. OBSTÁCULO (Caixa/Prateleira)
+        ctx.fillStyle = "#a36d4a"; // Marrom papelão
+        ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
+        ctx.strokeStyle = "#fff"; ctx.strokeRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
+
+  // 3. VENDEDOR
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
         if (vendedor.carrying && imgFralda.complete) {
             ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 10, 40, 40);
         }
 
-        // 3. ESTOQUE
+        // 4. ARARAS
+        if (imgArara2.complete) ctx.drawImage(imgArara2, arara2.x, arara2.y, arara2.w, arara2.h);
+        if (imgArara1.complete) ctx.drawImage(imgArara1, arara1.x, arara1.y, arara1.w, arara1.h);
+	
+        // 5. ESTOQUE E BALCÃO
         if (imgEstoque.complete) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
-
-        // 4. BALCÃO
         if (imgBalcao.complete) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
 
-        // 5. CLIENTE (Na frente do balcão)
+        // 6. CLIENTE E FALA
         if (imgCliente.complete) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
 
-        // --- ADIÇÃO: BALÃO DE FALA DO CLIENTE ---
         if (cliente.status === "ESPERANDO") {
             const falaX = cliente.x - 50;
             const falaY = cliente.y - 40;
-
-            // Desenha o fundo do balão (Retângulo arredondado branco)
             ctx.fillStyle = "white";
             ctx.beginPath();
             ctx.roundRect(falaX, falaY, 200, 30, 10); 
             ctx.fill();
-
-            // Desenha o triângulo (ponteiro) do balão
             ctx.beginPath();
             ctx.moveTo(cliente.x + 20, falaY + 30);
             ctx.lineTo(cliente.x + 30, falaY + 45);
             ctx.lineTo(cliente.x + 40, falaY + 30);
             ctx.fill();
-
-            // Texto da fala
             ctx.fillStyle = "black";
             ctx.font = "bold 14px Arial";
             ctx.fillText("Olá, quero fraldas, por favor!", falaX + 10, falaY + 20);
         }
-        // ---------------------------------------
 
-        // UI - Score
+        // UI
         ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
         ctx.fillText("Clientes Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
     }
-
 
     function gameLoop() {
         update();
@@ -213,4 +218,3 @@
 </script>
 </body>
 </html>
-
