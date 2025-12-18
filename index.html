@@ -63,7 +63,7 @@
 
     // CONFIGURAÇÕES DE POSIÇÃO
     const estoque = { x: 20, y: 20, w: 280, h: 240 }; 
-    const balcao = { x: 250, y: 160, w: 300, h: 130 }; 
+    const balcao = { x: 250, y: 170, w: 300, h: 130 }; 
     const vendedor = { x: 400, y: 400, w: 60, h: 80, speed: 6, carrying: false };
     let cliente = { x: 370, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
 
@@ -108,8 +108,8 @@
         // Movimento do Cliente (Para em y=80, ATRÁS do balcão)
         if (cliente.status === "ENTRANDO") {
             cliente.y -= cliente.vel; 
-            if (cliente.y <= 160) {
-                cliente.y = 160;
+            if (cliente.y <= 200) {
+                cliente.y = 200;
                 cliente.status = "ESPERANDO";
             }
         } else if (cliente.status === "SAINDO") {
@@ -132,7 +132,7 @@
 
         // Entrega (Vendedor encosta na base do balcão para entregar)
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            if (Math.abs(vendedor.x - balcao.x - 100) < 150 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 40) {
+            if (Math.abs(vendedor.x - balcao.x - 110) < 150 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 60) {
                 vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
@@ -184,5 +184,6 @@
 </script>
 </body>
 </html>
+
 
 
