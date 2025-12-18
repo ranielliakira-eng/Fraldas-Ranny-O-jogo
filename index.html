@@ -132,7 +132,7 @@
 
         // Entrega (Vendedor encosta na base do balcão para entregar)
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            if (Math.abs(vendedor.x - balcao.x ) < 100 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 120) {
+            if (Math.abs(vendedor.x - balcao.x ) < 50 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < -250) {
                 vendedor.carrying = false; cliente.status = "SAINDO"; score++;
             }
         }
@@ -184,6 +184,7 @@
 </script>
 </body>
 </html>
+
 
 
 
