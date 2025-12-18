@@ -64,9 +64,16 @@ function iniciarAudio() {
     const imgChao = carregarImg('piso_loja.png');
 
     const vendedor = { x: 400, y: 450, w: 60, h: 80, speed: 6, carrying: false };
-    const balcao = { x: 250, y: 150, w: 250, h: 150 };
-    const estoque = { x: 20, y: 360, w: 280, h: 240 };
-    let cliente = { x: 850, y: 100, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
+    const estoque = { x: 20, y: 20, w: 280, h: 240 }; // Canto Superior Esquerdo
+    const balcao = { x: 250, y: 300, w: 300, h: 100 }; // Ajustado para não colidir
+    
+    let cliente = { 
+    x: 370,      // Centralizado horizontalmente em relação ao balcão
+    y: 650,      // Começa abaixo da tela
+    w: 60, h: 80, 
+    status: "ENTRANDO", 
+    vel: 3 
+};
 
     let moveX = 0, moveY = 0;
     const teclas = {};
@@ -108,30 +115,40 @@ function iniciarAudio() {
         vendedor.x = Math.max(0, Math.min(canvas.width - vendedor.w, vendedor.x));
         vendedor.y = Math.max(0, Math.min(canvas.height - vendedor.h, vendedor.y));
 
-        if (cliente.status === "ENTRANDO") {
-            cliente.x -= cliente.vel; 
-            if (cliente.x <= balcao.x + 130) cliente.status = "ESPERANDO";
-        } else if (cliente.status === "SAINDO") {
-            cliente.x += cliente.vel + 2;
-            if (cliente.x > 850) {
-                if (score < TOTAL_CLIENTES) { cliente.x = 850; cliente.status = "ENTRANDO"; }
-                else { estado = "FIM"; joystick.style.display = "none"; document.getElementById("telaFinal").style.display = "block"; }
-            }
+if (cliente.status === "ENTRANDO") {
+    cliente.y -= cliente.vel; // Sobe em direção ao balcão
+    if (cliente.y <= balcao.y + balcao.h) { // Para ao encostar na parte de baixo do balcão
+        cliente.status = "ESPERANDO";
+    }
+} else if (cliente.status === "SAINDO") {
+    cliente.y += cliente.vel + 2; // Desce para sair da tela
+    if (cliente.y > 650) {
+        if (score < TOTAL_CLIENTES) {
+            cliente.y = 650; 
+            cliente.status = "ENTRANDO";
+        } else {
+            estado = "FIM";
+            musicaFundo.pause();
+            joystick.style.display = "none";
+            document.getElementById("telaFinal").style.display = "block";
         }
+    }
+}
+
 
         // Colisão Estoque
         if (!vendedor.carrying && vendedor.x < estoque.x + estoque.w && vendedor.x + vendedor.w > estoque.x && vendedor.y < estoque.y + estoque.h && vendedor.y + vendedor.h > estoque.y) {
             vendedor.carrying = true;
         }
 
-        // Entrega Precisa (Apenas se estiver perto do cliente no X E Y)
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            let distX = Math.abs(vendedor.x - cliente.x);
-            let distY = Math.abs(vendedor.y - (balcao.y + balcao.h)); // Distância da base do balcão
-            if (distX < 80 && distY < 60) {
-                vendedor.carrying = false; cliente.status = "SAINDO"; score++;
-            }
-        }
+        if (Math.abs(vendedor.x - cliente.x) < 70 && Math.abs(vendedor.y - cliente.y) < 70) {
+        vendedor.carrying = false; 
+        cliente.status = "SAINDO"; 
+        score++;
+    }
+}
+
     }
 
     function draw() {
@@ -164,9 +181,13 @@ function iniciarAudio() {
             else { ctx.fillStyle = "#fff"; ctx.fillRect(vendedor.x + (vendedor.w/2 - wFr/2), vendedor.y - hFr + 10, wFr, hFr); }
         }
 
-        ctx.fillStyle = "#333"; ctx.font = "bold 22px Arial";
-        ctx.fillText(`Atendimentos: ${score} / ${TOTAL_CLIENTES}`, 20, 40);
-    }
+
+        ctx.fillStyle = "#333"; 
+ctx.font = "bold 22px Arial";
+ctx.textAlign = "right"; // Alinha o texto à direita
+ctx.fillText(`Atendimentos: ${score} / ${TOTAL_CLIENTES}`, canvas.width - 20, 40);
+ctx.textAlign = "left"; // Reseta para não afetar outros textos (importante!)
+
 
     document.getElementById("btnComoChegar").onclick = () => window.open(clickTag, "_blank");
 
@@ -179,6 +200,7 @@ function iniciarAudio() {
 </script>
 </body>
 </html>
+
 
 
 
