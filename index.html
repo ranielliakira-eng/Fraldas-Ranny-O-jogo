@@ -131,11 +131,20 @@
         }
 
         // Entrega (Vendedor encosta na base do balcão para entregar)
-        if (vendedor.carrying && cliente.status === "ESPERANDO") {
-            if (Math.abs(vendedor.x - balcao.x ) < 5 && Math.abs(vendedor.y - (balcao.y + balcao.h)) < 150) {
-                vendedor.carrying = false; cliente.status = "SAINDO"; score++;
-            }
-        }
+        // Entrega (Vendedor encosta na frente do balcão para entregar)
+if (vendedor.carrying && cliente.status === "ESPERANDO") {
+    // Verificamos se o vendedor está alinhado horizontalmente com o balcão
+    // E se ele está encostando na parte de baixo (y + h) do balcão
+    if (vendedor.x + vendedor.w > balcao.x && 
+        vendedor.x < balcao.x + balcao.w && 
+        Math.abs(vendedor.y - (balcao.y + balcao.h)) < 20) {
+        
+        vendedor.carrying = false; 
+        cliente.status = "SAINDO"; 
+        score++;
+    }
+}
+
     }
 
     function draw() {
@@ -184,6 +193,7 @@
 </script>
 </body>
 </html>
+
 
 
 
