@@ -136,34 +136,58 @@
         }
     }
 
-    function draw() {
+        function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Piso
+        // 1. CHÃO
         if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
-
-        // 2. Vendedor (Agora desenhado primeiro para ficar ATRÁS de tudo)
+        
+        // 2. VENDEDOR (Atrás do balcão)
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
-
-        // 3. Fralda (Na mão do vendedor)
         if (vendedor.carrying && imgFralda.complete) {
             ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 10, 40, 40);
         }
 
-        // 4. Estoque (Antes do cliente)
+        // 3. ESTOQUE
         if (imgEstoque.complete) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
 
-        // 5. Balcão (Cobre o vendedor)
+        // 4. BALCÃO
         if (imgBalcao.complete) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
 
-        // 6. Cliente (Desenhado por último para ficar À FRENTE do balcão)
+        // 5. CLIENTE (Na frente do balcão)
         if (imgCliente.complete) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
 
-        // Score
+        // --- ADIÇÃO: BALÃO DE FALA DO CLIENTE ---
+        if (cliente.status === "ESPERANDO") {
+            const falaX = cliente.x - 50;
+            const falaY = cliente.y - 40;
+
+            // Desenha o fundo do balão (Retângulo arredondado branco)
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.roundRect(falaX, falaY, 200, 30, 10); 
+            ctx.fill();
+
+            // Desenha o triângulo (ponteiro) do balão
+            ctx.beginPath();
+            ctx.moveTo(cliente.x + 20, falaY + 30);
+            ctx.lineTo(cliente.x + 30, falaY + 45);
+            ctx.lineTo(cliente.x + 40, falaY + 30);
+            ctx.fill();
+
+            // Texto da fala
+            ctx.fillStyle = "black";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText("Olá, quero fraldas, por favor!", falaX + 10, falaY + 20);
+        }
+        // ---------------------------------------
+
+        // UI - Score
         ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
         ctx.fillText("Clientes Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
     }
+
 
     function gameLoop() {
         update();
@@ -175,4 +199,5 @@
 </script>
 </body>
 </html>
+
 
