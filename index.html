@@ -21,7 +21,7 @@
 <div id="telaFinal">
     <h1>Fraldas Ranny</h1>
     <p>Parabéns! Você atendeu os clientes. <br> Visite nossa loja física</p>
-    <a id="btnComoChegar" href="https://www.google.com/maps/dir/?api=1&destination=Estrada+do+Jaguaré+1706+São+Paulo" target="_blank">📍 Abrir no Google Maps</a>
+    <a id="btnComoChegar" href="www.google.com" target="_blank">📍 Abrir no Google Maps</a>
     <button onclick="location.reload()" style="background:none; border:1px solid #fff; color:#fff; padding:10px; margin-top:15px; cursor:pointer; border-radius:10px; width: 80%; margin-left: auto; margin-right: auto;">Jogar Novamente</button>
 </div>
 
@@ -61,8 +61,10 @@
     const imgArara1 = carregarImg('arara-de-roupas-1.png');
     const imgArara2 = carregarImg('arara-de-roupas-2.png');
     const imgChao = carregarImg('piso_loja.png');
+    const imgMao = carregarImg('mao.png');
 
-    // CONFIGURAÇÕES DE POSIÇÃO E OBSTÁCULOS
+    let anguloMao = 0; // Para animação da mãozinha
+
     const obstaculo = { x: 305, y: 300, w: 200, h: 5 };
     const estoque = { x: 20, y: 360, w: 280, h: 240 };
     const arara1 = { x: 600, y: 400, w: 150, h: 150 }; 
@@ -96,7 +98,6 @@
         knob.style.transform = `translate(${Math.cos(Math.atan2(dy, dx)) * visualDist}px, ${Math.sin(Math.atan2(dy, dx)) * visualDist}px)`;
     }
 
-    // Função auxiliar para checar colisão entre dois retângulos
     function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
         return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1;
     }
@@ -110,7 +111,6 @@
         let vx = (tx + moveX) * vendedor.speed;
         let vy = (ty + moveY) * vendedor.speed;
 
-        // Movimentação com colisão separada por eixo (permite deslizar)
         let originalX = vendedor.x;
         vendedor.x += vx;
         if (rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h)) {
@@ -142,12 +142,10 @@
             }
         }
 
-        // Colisão Estoque
         if (!vendedor.carrying && rectIntersect(vendedor.x, vendedor.y, vendedor.w, vendedor.h, estoque.x, estoque.y, estoque.w, estoque.h)) {
             vendedor.carrying = true;
         }
 
-        // Entrega Balcão
         if (vendedor.carrying && cliente.status === "ESPERANDO") {
             if (vendedor.x > 300 && vendedor.x < 450 && vendedor.y > 100 && vendedor.y < 200) {
                 vendedor.carrying = false; 
@@ -160,30 +158,24 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. CHÃO
         if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
         else { ctx.fillStyle = "#f3e5ab"; ctx.fillRect(0, 0, 800, 600); }
 
-        // 2. OBSTÁCULO (Caixa/Prateleira)
-        ctx.fillStyle = "#a36d4a"; // Marrom papelão
+        ctx.fillStyle = "#a36d4a"; 
         ctx.fillRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
         ctx.strokeStyle = "#fff"; ctx.strokeRect(obstaculo.x, obstaculo.y, obstaculo.w, obstaculo.h);
 
-  // 3. VENDEDOR
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
         if (vendedor.carrying && imgFralda.complete) {
-            ctx.drawImage(imgFralda, vendedor.x +10, vendedor.y +40, 40, 30);
+            ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 40, 40, 30);
         }
 
-        // 4. ARARAS
         if (imgArara2.complete) ctx.drawImage(imgArara2, arara2.x, arara2.y, arara2.w, arara2.h);
         if (imgArara1.complete) ctx.drawImage(imgArara1, arara1.x, arara1.y, arara1.w, arara1.h);
 	
-        // 5. ESTOQUE E BALCÃO
         if (imgEstoque.complete) ctx.drawImage(imgEstoque, estoque.x, estoque.y, estoque.w, estoque.h);
         if (imgBalcao.complete) ctx.drawImage(imgBalcao, balcao.x, balcao.y, balcao.w, balcao.h);
 
-        // 6. CLIENTE E FALA
         if (imgCliente.complete) ctx.drawImage(imgCliente, cliente.x, cliente.y, cliente.w, cliente.h);
 
         if (cliente.status === "ESPERANDO") {
@@ -201,9 +193,20 @@
             ctx.fillStyle = "black";
             ctx.font = "bold 14px Arial";
             ctx.fillText("Olá, quero fraldas, por favor!", falaX + 10, falaY + 20);
+
+            // LOGICA DAS MÃOZINHAS
+            anguloMao += 0.1;
+            let flutuar = Math.sin(anguloMao) * 10;
+
+            if (!vendedor.carrying) {
+                // Aponta para o Estoque
+                if (imgMao.complete) ctx.drawImage(imgMao, estoque.x + 110, estoque.y - 50 + flutuar, 45, 45);
+            } else {
+                // Aponta para o Balcão
+                if (imgMao.complete) ctx.drawImage(imgMao, balcao.x + 75, balcao.y - 60 + flutuar, 45, 45);
+            }
         }
 
-        // UI
         ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
         ctx.fillText("Clientes Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
     }
