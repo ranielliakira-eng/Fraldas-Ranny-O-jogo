@@ -33,11 +33,16 @@
     let audioIniciado = false;
 
     function iniciarAudio() {
-        if (!audioIniciado) {
-            musicaFundo.play().catch(e => console.log("Áudio aguardando interação."));
+    if (!audioIniciado) {
+        // Tenta tocar e gerencia o bloqueio do navegador
+        musicaFundo.play().then(() => {
             audioIniciado = true;
-        }
+        }).catch(e => {
+            console.log("Aguardando interação para iniciar o som.");
+        });
     }
+}
+
 
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -187,6 +192,7 @@ if (vendedor.carrying && cliente.status === "ESPERANDO") {
 </script>
 </body>
 </html>
+
 
 
 
