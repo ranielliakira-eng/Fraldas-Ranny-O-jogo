@@ -68,7 +68,7 @@
     const arara1 = { x: 600, y: 400, w: 150, h: 150 }; 
     const arara2 = { x: 600, y: 300, w: 150, h: 150 }; 
     const balcao = { x: 300, y: 170, w: 200, h: 130 }; 
-    const vendedor = { x: 370, y: 80, w: 60, h: 80, speed: 6, carrying: false };
+    const vendedor = { x: 370, y: 80, w: 60, h: 90, speed: 6, carrying: false };
     let cliente = { x: 450, y: 650, w: 60, h: 80, status: "ENTRANDO", vel: 3 };
 
     let moveX = 0, moveY = 0;
@@ -172,7 +172,7 @@
   // 3. VENDEDOR
         if (imgVendedor.complete) ctx.drawImage(imgVendedor, vendedor.x, vendedor.y, vendedor.w, vendedor.h);
         if (vendedor.carrying && imgFralda.complete) {
-            ctx.drawImage(imgFralda, vendedor.x + 10, vendedor.y + 10, 40, 40);
+            ctx.drawImage(imgFralda, vendedor.x +10, vendedor.y +40, 40, 30);
         }
 
         // 4. ARARAS
