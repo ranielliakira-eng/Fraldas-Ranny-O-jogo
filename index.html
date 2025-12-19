@@ -152,7 +152,7 @@
             { img: imgArara2, x: arara2.x, y: arara2.y, w: arara2.w, h: arara2.h, yBase: arara2.y + arara2.h },
             { img: imgVendedor, x: vendedor.x, y: vendedor.y, w: vendedor.w, h: vendedor.h, yBase: vendedor.y + vendedor.h, tipo: 'v' },
             { img: imgClienteAtual, x: cliente.x, y: cliente.y, w: cliente.w, h: cliente.h, yBase: cliente.y + cliente.h },
-            { img: imgArvoreNatal, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h },
+            { img: imgBebeNatal, x: bebe.x, y: bebe.y - pulo, w: bebe.w, h: bebe.h, yBase: bebe.y + bebe.h }
             { img: (Math.floor(frameCount / 30) % 2 === 0) ? imgArvoreNatal : imgArvoreNatal2, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h}
         ]
         
@@ -185,6 +185,7 @@
 </script>
 </body>
 </html>
+
 
 
 
