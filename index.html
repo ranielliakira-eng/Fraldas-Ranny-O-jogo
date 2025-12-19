@@ -61,8 +61,16 @@
     const imgEstoque3 = carregarImg('Estoque3.png');
     let imgEstoqueAtual = imgEstoque1;
 
-    const imagensClientes = [carregarImg('cliente1.png'), carregarImg('cliente2.png'), carregarImg('cliente3.png'), carregarImg('cliente4.png'), carregarImg('cliente5.png'), carregarImg('cliente6.png')];
-    let imgClienteAtual = imagensClientes[Math.floor(Math.random() * imagensClientes.length)]; 
+    const clientesDados = [
+    { normal: carregarImg('cliente1.png'), piscando: carregarImg('cliente1.1.png') },
+    { normal: carregarImg('cliente2.png'), piscando: carregarImg('cliente2.1.png') },
+    { normal: carregarImg('cliente3.png'), piscando: carregarImg('cliente3.1.png') },
+    { normal: carregarImg('cliente4.png'), piscando: carregarImg('cliente4.1.png') },
+    { normal: carregarImg('cliente5.png'), piscando: carregarImg('cliente5.1.png') },
+    { normal: carregarImg('cliente6.png'), piscando: carregarImg('cliente6.1.png') }
+    ];
+    
+    let dadosClienteAtual = clientesDados[Math.floor(Math.random() * clientesDados.length)];
     let frameCount = 0;
     
     // POSIÇÕES
@@ -83,7 +91,10 @@
     let moveX = 0, moveY = 0, anguloMao = 0, anguloBebe = 0; // anguloBebe adicionado
     const teclas = {};
 
-    function sortearProximoCliente() { imgClienteAtual = imagensClientes[Math.floor(Math.random() * imagensClientes.length)]; }
+// Procure a função e mude para:
+function sortearProximoCliente() { 
+    dadosClienteAtual = clientesDados[Math.floor(Math.random() * clientesDados.length)]; 
+}
     function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) { return x2 < x1 + w1 && x2 + w2 > x1 && y2 < y1 + h1 && y2 + h2 > y1; }
 
     window.addEventListener("keydown", e => { teclas[e.code] = true; iniciarAudio(); });
@@ -141,6 +152,10 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (imgChao.complete) ctx.drawImage(imgChao, 0, 0, 800, 600);
 
+        let imagemExibir = (cliente.status === "ESPERANDO" && frameCount % 120 > 110) 
+                   ? dadosClienteAtual.piscando 
+                   : dadosClienteAtual.normal;
+
         // Efeito Pulo Bebê
         anguloBebe += 0.15;
         let pulo = Math.abs(Math.sin(anguloBebe)) * 15;
@@ -151,7 +166,7 @@
             { img: imgArara1, x: arara1.x, y: arara1.y, w: arara1.w, h: arara1.h, yBase: arara1.y + arara1.h },
             { img: imgArara2, x: arara2.x, y: arara2.y, w: arara2.w, h: arara2.h, yBase: arara2.y + arara2.h },
             { img: imgVendedor, x: vendedor.x, y: vendedor.y, w: vendedor.w, h: vendedor.h, yBase: vendedor.y + vendedor.h, tipo: 'v' },
-            { img: imgClienteAtual, x: cliente.x, y: cliente.y, w: cliente.w, h: cliente.h, yBase: cliente.y + cliente.h },
+            { img: imagemExibir, x: cliente.x, y: cliente.y, w: cliente.w, h: cliente.h, yBase: cliente.y + cliente.h },
             { img: imgBebeNatal, x: bebe.x, y: bebe.y - pulo, w: bebe.w, h: bebe.h, yBase: bebe.y + bebe.h },
             { img: (Math.floor(frameCount / 30) % 2 === 0) ? imgArvoreNatal : imgArvoreNatal2, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h}
         ];
@@ -185,6 +200,7 @@
 </script>
 </body>
 </html>
+
 
 
 
