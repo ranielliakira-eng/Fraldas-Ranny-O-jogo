@@ -48,6 +48,7 @@
 
     // IMAGENS
     const imgArvoreNatal = carregarImg('arvore_natal.png');
+    const imgArvoreNatal2 = carregarImg('arvore_natal2.png');
     const imgBebeNatal = carregarImg('bebe_natal.png');
     const imgFralda = carregarImg('Fraldas.png');
     const imgVendedor = carregarImg('vendedor.png');
@@ -62,7 +63,8 @@
 
     const imagensClientes = [carregarImg('cliente1.png'), carregarImg('cliente2.png'), carregarImg('cliente3.png'), carregarImg('cliente4.png'), carregarImg('cliente5.png'), carregarImg('cliente6.png')];
     let imgClienteAtual = imagensClientes[Math.floor(Math.random() * imagensClientes.length)]; 
-
+    let frameCount = 0;
+    
     // POSIÇÕES
     const estoque = { x: 20, y: 360, w: 280, h: 240 };
     const balcao = { x: 300, y: 170, w: 200, h: 130 };
@@ -151,8 +153,9 @@
             { img: imgVendedor, x: vendedor.x, y: vendedor.y, w: vendedor.w, h: vendedor.h, yBase: vendedor.y + vendedor.h, tipo: 'v' },
             { img: imgClienteAtual, x: cliente.x, y: cliente.y, w: cliente.w, h: cliente.h, yBase: cliente.y + cliente.h },
             { img: imgArvoreNatal, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h },
-            { img: imgBebeNatal, x: bebe.x, y: bebe.y - pulo, w: bebe.w, h: bebe.h, yBase: bebe.y + bebe.h }
-        ];
+            { img: (Math.floor(frameCount / 30) % 2 === 0) ? imgArvoreNatal : imgArvoreNatal2, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h}
+        ]
+        
 
         objetos.sort((a, b) => a.yBase - b.yBase).forEach(obj => {
             if (obj.img.complete) {
@@ -174,6 +177,7 @@
         }
         ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
         ctx.fillText("Atendidos: " + score + " / " + TOTAL_CLIENTES, 20, 40);
+        frameCount++;
     }
 
     function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
@@ -181,6 +185,7 @@
 </script>
 </body>
 </html>
+
 
 
 
