@@ -51,6 +51,7 @@
   // const imgArvoreNatal = carregarImg('arvore_natal.png');
   //  const imgArvoreNatal2 = carregarImg('arvore_natal2.png');
   //  const imgBebeNatal = carregarImg('bebe_natal.png');
+    const imgBebeAnoNovo = carregarImg('bebe_ano_novo.png');
     const imgFralda = carregarImg('Fraldas.png');
     const imgVendedor = carregarImg('vendedor.png');
     const imgBalcao = carregarImg('balcao.png');
@@ -81,6 +82,7 @@
     const arara2 = { x: 550, y: 300, w: 180, h: 180 };
    // const arvore = { x: 600, y: 50, w: 170, h: 200 }; 
    // const bebe = { x: 90, y: 170, w: 120, h: 100 };
+    const bebe = { x: 90, y: 170, w: 120, h: 100 };
     
     const colisaoEstoque = { x: 20, y: 490, w: 240, h: 10 };
     const colisaoBalcao = { x: 310, y: 250, w: 180, h: 10 };
@@ -169,6 +171,7 @@ function sortearProximoCliente() {
             { img: imgVendedor, x: vendedor.x, y: vendedor.y, w: vendedor.w, h: vendedor.h, yBase: vendedor.y + vendedor.h, tipo: 'v' },
             { img: imagemExibir, x: cliente.x, y: cliente.y, w: cliente.w, h: cliente.h, yBase: cliente.y + cliente.h },
         //    { img: imgBebeNatal, x: bebe.x, y: bebe.y - pulo, w: bebe.w, h: bebe.h, yBase: bebe.y + bebe.h },
+            { img: imgBebeAnoNovo, x: bebe.x, y: bebe.y - pulo, w: bebe.w, h: bebe.h, yBase: bebe.y + bebe.h },
         //    { img: (Math.floor(frameCount / 30) % 2 === 0) ? imgArvoreNatal : imgArvoreNatal2, x: arvore.x, y: arvore.y, w: arvore.w, h: arvore.h, yBase: arvore.y + arvore.h}
         ];
         
@@ -201,6 +204,7 @@ function sortearProximoCliente() {
 </script>
 </body>
 </html>
+
 
 
 
